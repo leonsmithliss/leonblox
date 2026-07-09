@@ -148,7 +148,7 @@ router.get("/youtube-stats", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch YouTube stats");
     if (cache) { res.json(cache); return; }
-    res.status(502).json({ error: "Failed to fetch YouTube stats" });
+    res.status(502).json({ error: "Failed to fetch YouTube stats", detail: String(err) });
   }
 });
 
