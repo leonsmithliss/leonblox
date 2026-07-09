@@ -1,0 +1,36 @@
+<h1>LeonBlox Stream Reader</h1>
+<p>Leave this page open while streaming.</p>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabase = createClient(
+  "https://dpxkklbkvnirkxtnhkko.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRweGtrbGJrdm5pcmt4dG5oa2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDUwMTAsImV4cCI6MjA5NTc4MTAxMH0.GPUqtru2u28xcg1_dJHVNuBOCjwkZcCmpr8cvszQxHE"
+);
+
+async function checkMessages() {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("played", false)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  for (const m of data) {
+    const speech = new SpeechSynthesisUtterance(m.msg);
+    speechSynthesis.speak(speech);
+
+    await supabase
+      .from("messages")
+      .update({ played: true })
+      .eq("id", m.id);
+  }
+}
+
+setInterval(checkMessages, 1500);
+</script>
