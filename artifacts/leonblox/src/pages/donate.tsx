@@ -3,23 +3,22 @@ import SiteNav from "@/components/site-nav";
 import SiteFooter from "@/components/site-footer";
 
 export default function Donate() {
-  const [amount, setAmount] = useState(25);
-  const [inputVal, setInputVal] = useState("25");
+  const [sliderAmount, setSliderAmount] = useState(25);
+  const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // If user typed something, use that exact value; otherwise use slider
+  const typedAmount = inputVal !== "" ? parseFloat(inputVal) : null;
+  const amount = typedAmount !== null && !isNaN(typedAmount) ? typedAmount : sliderAmount;
+
   function handleSlider(val: number) {
-    setAmount(val);
-    setInputVal(String(val));
+    setSliderAmount(val);
+    setInputVal("");
   }
 
   function handleInput(raw: string) {
     setInputVal(raw);
-    const n = parseInt(raw, 10);
-    if (!isNaN(n) && n >= 5 && n <= 10000) {
-      const snapped = Math.round(n / 5) * 5;
-      setAmount(snapped);
-    }
   }
 
   async function handleDonate(e: React.FormEvent) {
@@ -44,7 +43,7 @@ export default function Donate() {
     setLoading(false);
   }
 
-  const pct = ((amount - 5) / (10000 - 5)) * 100;
+  const pct = ((sliderAmount - 5) / (10000 - 5)) * 100;
 
   return (
     <div className="min-h-[100dvh] w-full bg-background text-foreground overflow-x-hidden">
@@ -74,7 +73,7 @@ export default function Donate() {
               min={5}
               max={10000}
               step={5}
-              value={amount}
+              value={sliderAmount}
               onChange={(e) => handleSlider(Number(e.target.value))}
               className="w-full h-2 appearance-none rounded-none cursor-pointer"
               style={{
