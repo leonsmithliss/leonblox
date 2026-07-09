@@ -4,8 +4,23 @@ import SiteFooter from "@/components/site-footer";
 
 export default function Donate() {
   const [amount, setAmount] = useState(25);
+  const [inputVal, setInputVal] = useState("25");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  function handleSlider(val: number) {
+    setAmount(val);
+    setInputVal(String(val));
+  }
+
+  function handleInput(raw: string) {
+    setInputVal(raw);
+    const n = parseInt(raw, 10);
+    if (!isNaN(n) && n >= 5 && n <= 10000) {
+      const snapped = Math.round(n / 5) * 5;
+      setAmount(snapped);
+    }
+  }
 
   async function handleDonate(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +75,7 @@ export default function Donate() {
               max={10000}
               step={5}
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) => handleSlider(Number(e.target.value))}
               className="w-full h-2 appearance-none rounded-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, rgb(0,255,255) 0%, rgb(0,255,255) ${pct}%, rgb(30,30,30) ${pct}%, rgb(30,30,30) 100%)`,
@@ -69,6 +84,23 @@ export default function Donate() {
             <div className="flex justify-between font-mono text-xs text-muted-foreground">
               <span>$5</span>
               <span>$10,000</span>
+            </div>
+          </div>
+
+          {/* Manual input */}
+          <div className="flex flex-col gap-2">
+            <label className="font-display text-xs tracking-widest text-muted-foreground">OR TYPE AN AMOUNT</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono">$</span>
+              <input
+                type="number"
+                min={5}
+                max={10000}
+                value={inputVal}
+                onChange={(e) => handleInput(e.target.value)}
+                placeholder="Enter amount"
+                className="w-full bg-background border border-border pl-8 pr-4 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary transition-colors font-mono text-sm"
+              />
             </div>
           </div>
 
