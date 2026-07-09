@@ -29,7 +29,7 @@ export default function Donate() {
     setLoading(false);
   }
 
-  const pct = ((amount - 5) / (1000 - 5)) * 100;
+  const pct = ((amount - 5) / (10000 - 5)) * 100;
 
   return (
     <div className="min-h-[100dvh] w-full bg-background text-foreground overflow-x-hidden">
@@ -57,7 +57,7 @@ export default function Donate() {
             <input
               type="range"
               min={5}
-              max={1000}
+              max={10000}
               step={5}
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
@@ -68,7 +68,7 @@ export default function Donate() {
             />
             <div className="flex justify-between font-mono text-xs text-muted-foreground">
               <span>$5</span>
-              <span>$1,000</span>
+              <span>$10,000</span>
             </div>
           </div>
 
