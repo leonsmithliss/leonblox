@@ -11,7 +11,6 @@ import adminExportRouter from "./admin-export";
 import adminSignupsRouter from "./admin-signups";
 import stripeCheckoutRouter from "./stripe-checkout";
 import stripeSeedRouter from "./stripe-seed";
-import sponsorInquiryRouter from "./sponsor-inquiry";
 
 const router: IRouter = Router();
 
@@ -27,6 +26,5 @@ router.use(adminExportRouter);
 router.use(adminSignupsRouter);
 router.use(stripeCheckoutRouter);
 router.use(stripeSeedRouter);
-router.use(sponsorInquiryRouter);
 
 export default router;
