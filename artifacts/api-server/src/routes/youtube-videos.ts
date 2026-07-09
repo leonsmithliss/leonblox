@@ -31,18 +31,7 @@ router.get("/youtube-videos", async (req, res) => {
   }
 
   try {
-    const normalizedHandle = handle.startsWith("@") ? handle : `@${handle}`;
-
-    // Step 1: get channel ID from handle
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(normalizedHandle)}&key=${apiKey}`
-    );
-    if (!channelRes.ok) throw new Error(`channels API returned ${channelRes.status}`);
-    const channelData = (await channelRes.json()) as {
-      items?: Array<{ id?: string }>;
-    };
-    const channelId = channelData.items?.[0]?.id;
-    if (!channelId) throw new Error("Could not find channel ID");
+    const channelId = process.env.YOUTUBE_CHANNEL_ID ?? "UCbFQZPkuFWjp_Zf_Czh0tLQ";
 
     // Step 2: search for videos ordered by upload date (most recent first)
     const searchRes = await fetch(

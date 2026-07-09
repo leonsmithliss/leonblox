@@ -132,15 +132,7 @@ router.get("/youtube-content", async (req, res) => {
   }
 
   try {
-    const normalizedHandle = handle.startsWith("@") ? handle : `@${handle}`;
-
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(normalizedHandle)}&key=${apiKey}`
-    );
-    if (!channelRes.ok) throw new Error(`channels API returned ${channelRes.status}`);
-    const channelData = (await channelRes.json()) as { items?: Array<{ id?: string }> };
-    const channelId = channelData.items?.[0]?.id;
-    if (!channelId) throw new Error("Could not find channel ID");
+    const channelId = process.env.YOUTUBE_CHANNEL_ID ?? "UCbFQZPkuFWjp_Zf_Czh0tLQ";
 
     // Search all four categories in parallel
     const [shortsRaw, livestreamsRaw, longRaw, mediumRaw] = await Promise.all([
