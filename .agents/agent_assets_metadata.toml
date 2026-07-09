@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "OeDc9_J4ucIHwrjk3QNKs"
+uri = "file://artifacts/leonblox/public/images/hero-bg.png"
+type = "image"
+title = "cyberpunk blocky character silhouette"
+
+[[generated]]
+id = "8nVQd3kvpV7NgGkr4cq_f"
+uri = "file://artifacts/leonblox/public/images/merch-hoodie.png"
+type = "image"
+title = "streetwear gaming hoodie"
