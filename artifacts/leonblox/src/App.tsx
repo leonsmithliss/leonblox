@@ -10,6 +10,7 @@ import Upcoming from "@/pages/upcoming";
 import SignUp from "@/pages/signup";
 import Admin from "@/pages/admin";
 import Merch from "@/pages/merch";
+import Sponsors from "@/pages/sponsors";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 import SiteFooter from "@/components/site-footer";
@@ -159,6 +160,7 @@ function Router() {
       <Route path="/upcoming" component={Upcoming} />
       <Route path="/signup" component={SignUp} />
       <Route path="/merch" component={Merch} />
+      <Route path="/sponsors" component={Sponsors} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

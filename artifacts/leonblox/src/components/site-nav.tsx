@@ -21,11 +21,11 @@ export default function SiteNav() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8 font-display text-sm font-semibold tracking-widest text-muted-foreground">
-          <Link href="/#about" className="hover:text-primary transition-colors">ABOUT</Link>
           <Link href="/videos" className="hover:text-primary transition-colors">CONTENT</Link>
           <Link href="/upcoming" className="hover:text-primary transition-colors">UPCOMING</Link>
           <Link href="/message" className="hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" className="hover:text-primary transition-colors">MERCH</Link>
+          <Link href="/sponsors" className="hover:text-primary transition-colors">SPONSORS</Link>
           <Link href="/signup" className="hover:text-primary transition-colors">SIGN UP</Link>
           <div className="relative">
             <Button
@@ -61,11 +61,11 @@ export default function SiteNav() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-background border-t border-border flex flex-col font-display text-sm font-semibold tracking-widest">
-          <Link href="/#about" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">ABOUT</Link>
           <Link href="/videos" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">CONTENT</Link>
           <Link href="/upcoming" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">UPCOMING</Link>
           <Link href="/message" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">MERCH</Link>
+          <Link href="/sponsors" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SPONSORS</Link>
           <Link href="/signup" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SIGN UP</Link>
           <a href="https://www.youtube.com/@LeonBloxOfficial" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">YOUTUBE</a>
           <a href="https://www.instagram.com/leonbloxofficial/" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">INSTAGRAM</a>
