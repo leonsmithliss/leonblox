@@ -43,7 +43,7 @@ export default function Donate() {
     setLoading(false);
   }
 
-  const pct = ((sliderAmount - 5) / (10000 - 5)) * 100;
+  const pct = ((sliderAmount - 5) / (100000 - 5)) * 100;
 
   return (
     <div className="min-h-[100dvh] w-full bg-background text-foreground overflow-x-hidden">
@@ -71,7 +71,7 @@ export default function Donate() {
             <input
               type="range"
               min={5}
-              max={10000}
+              max={100000}
               step={5}
               value={sliderAmount}
               onChange={(e) => handleSlider(Number(e.target.value))}
@@ -82,7 +82,7 @@ export default function Donate() {
             />
             <div className="flex justify-between font-mono text-xs text-muted-foreground">
               <span>$5</span>
-              <span>$10,000</span>
+              <span>$100,000</span>
             </div>
           </div>
 
@@ -94,7 +94,7 @@ export default function Donate() {
               <input
                 type="number"
                 min={5}
-                max={10000}
+                max={100000}
                 value={inputVal}
                 onChange={(e) => handleInput(e.target.value)}
                 placeholder="Enter amount"
