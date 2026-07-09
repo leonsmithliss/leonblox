@@ -10,10 +10,10 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const isSupabase = process.env.DATABASE_URL?.includes("supabase.co");
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
+  ssl: process.env.DATABASE_URL?.includes("supabase") ? { rejectUnauthorized: false } : false,
+  family: 4,
 });
 export const db = drizzle(pool, { schema });
 
