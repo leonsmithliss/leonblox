@@ -89,10 +89,12 @@ router.get("/youtube-stats", async (req, res) => {
 
   try {
     const normalizedHandle = handle.startsWith("@") ? handle : `@${handle}`;
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&forHandle=${encodeURIComponent(normalizedHandle)}&key=${apiKey}`
-    );
-    if (!channelRes.ok) throw new Error(`YouTube API returned ${channelRes.status}`);
+    const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&forHandle=${encodeURIComponent(normalizedHandle)}&key=${apiKey}`;
+    const channelRes = await fetch(channelUrl);
+    if (!channelRes.ok) {
+      const body = await channelRes.text();
+      throw new Error(`YouTube API returned ${channelRes.status}: ${body.slice(0, 200)}`);
+    }
 
     const channelData = (await channelRes.json()) as {
       items?: Array<{
