@@ -77,8 +77,8 @@ router.get("/youtube-stats", async (req, res) => {
     return;
   }
 
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  const handle = process.env.YOUTUBE_CHANNEL_HANDLE;
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
+  const handle = process.env.YOUTUBE_CHANNEL_HANDLE?.trim();
   const hasOAuth = !!(process.env.YOUTUBE_REFRESH_TOKEN && process.env.YOUTUBE_OAUTH_CLIENT_ID && process.env.YOUTUBE_OAUTH_CLIENT_SECRET);
 
   if (!apiKey || !handle) {

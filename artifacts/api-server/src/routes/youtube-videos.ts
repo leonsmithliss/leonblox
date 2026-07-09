@@ -21,7 +21,7 @@ router.get("/youtube-videos", async (req, res) => {
     return;
   }
 
-  const apiKey = process.env.YOUTUBE_API_KEY;
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
   const handle = process.env.YOUTUBE_CHANNEL_HANDLE;
 
   if (!apiKey || !handle) {
