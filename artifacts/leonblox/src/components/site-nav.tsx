@@ -26,6 +26,7 @@ export default function SiteNav() {
           <Link href="/message" className="hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" className="hover:text-primary transition-colors">MERCH</Link>
           <Link href="/sponsors" className="hover:text-primary transition-colors">SPONSORS</Link>
+          <Link href="/donate" className="hover:text-primary transition-colors">DONATE</Link>
           <Link href="/signup" className="hover:text-primary transition-colors">SIGN UP</Link>
           <div className="relative">
             <Button
@@ -66,6 +67,7 @@ export default function SiteNav() {
           <Link href="/message" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">MERCH</Link>
           <Link href="/sponsors" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SPONSORS</Link>
+          <Link href="/donate" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">DONATE</Link>
           <Link href="/signup" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SIGN UP</Link>
           <a href="https://www.youtube.com/@LeonBloxOfficial" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">YOUTUBE</a>
           <a href="https://www.instagram.com/leonbloxofficial/" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">INSTAGRAM</a>

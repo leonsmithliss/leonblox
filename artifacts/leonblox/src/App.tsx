@@ -11,6 +11,7 @@ import SignUp from "@/pages/signup";
 import Admin from "@/pages/admin";
 import Merch from "@/pages/merch";
 import Sponsors from "@/pages/sponsors";
+import Donate from "@/pages/donate";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 import SiteFooter from "@/components/site-footer";
@@ -161,6 +162,17 @@ function Router() {
       <Route path="/signup" component={SignUp} />
       <Route path="/merch" component={Merch} />
       <Route path="/sponsors" component={Sponsors} />
+      <Route path="/donate" component={Donate} />
+      <Route path="/donate/thanks" component={() => {
+        return (
+          <div className="min-h-[100dvh] bg-background text-foreground flex items-center justify-center px-6">
+            <div className="text-center">
+              <h1 className="font-display font-bold text-4xl tracking-widest mb-4">THANK <span className="text-primary">YOU</span></h1>
+              <p className="text-muted-foreground font-mono">Your donation means everything. You're a legend!</p>
+            </div>
+          </div>
+        );
+      }} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
