@@ -12,6 +12,7 @@ import adminSignupsRouter from "./admin-signups";
 import stripeCheckoutRouter from "./stripe-checkout";
 import stripeSeedRouter from "./stripe-seed";
 import donateRouter from "./donate";
+import adminModerateRouter from "./admin-moderate";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(adminSignupsRouter);
 router.use(stripeCheckoutRouter);
 router.use(stripeSeedRouter);
 router.use(donateRouter);
+router.use(adminModerateRouter);
 
 export default router;

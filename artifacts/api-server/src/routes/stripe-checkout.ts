@@ -79,12 +79,12 @@ router.get("/stripe/verify-payment", async (req, res) => {
   if (type === "message" && name && message) {
     const { error } = await supabaseAdmin
       .from("messages")
-      .insert([{ msg: message + ". From " + name, played: false }]);
+      .insert([{ msg: message + ". From " + name, played: false, status: "pending" }]);
     if (error) req.log.error({ error }, "Supabase insert failed after payment");
   } else if (type === "sound" && soundKey) {
     const { error } = await supabaseAdmin
       .from("messages")
-      .insert([{ msg: "", sound: soundKey, played: false }]);
+      .insert([{ msg: "", sound: soundKey, played: false, status: "approved" }]);
     if (error) req.log.error({ error }, "Supabase insert failed after payment");
   }
 

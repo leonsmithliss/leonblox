@@ -18,6 +18,7 @@ interface Message {
   msg: string;
   sound: string | null;
   played: boolean;
+  status: string;
 }
 
 interface Signup {
@@ -48,22 +49,20 @@ function StreamReader() {
   const processingRef = useRef(false);
   const readingRef = useRef(false);
 
-  // Keep readingRef in sync so the async loop can check it
   useEffect(() => {
     readingRef.current = reading;
   }, [reading]);
 
-  // Always poll the queue — regardless of reading state
   async function refreshQueue() {
     const { data } = await supabase
       .from("messages")
       .select("*")
       .eq("played", false)
+      .eq("status", "approved")
       .order("id", { ascending: true });
     setQueue(data ?? []);
   }
 
-  // Process and speak messages — only runs when reading is active
   async function processQueue() {
     if (processingRef.current || !readingRef.current) return;
 
@@ -71,6 +70,7 @@ function StreamReader() {
       .from("messages")
       .select("*")
       .eq("played", false)
+      .eq("status", "approved")
       .order("id", { ascending: true });
 
     if (!data || data.length === 0) return;
@@ -105,7 +105,6 @@ function StreamReader() {
 
       await supabase.from("messages").update({ played: true }).eq("id", m.id);
 
-      // 7-second gap between messages
       if (readingRef.current) {
         await new Promise<void>((res) => setTimeout(res, 7000));
       }
@@ -115,14 +114,12 @@ function StreamReader() {
     processingRef.current = false;
   }
 
-  // Queue polling — always on
   useEffect(() => {
     refreshQueue();
     const interval = setInterval(refreshQueue, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // Reading loop — only when active
   useEffect(() => {
     if (!reading) {
       speechSynthesis.cancel();
@@ -151,7 +148,6 @@ function StreamReader() {
         </button>
       </div>
 
-      {/* Now Reading — only shown when active */}
       {reading && (
         <div className="border border-primary/40 bg-primary/5 p-6 text-center shadow-[0_0_20px_rgba(0,255,255,0.1)]">
           <p className="font-display text-xs tracking-widest text-primary/60 mb-3">NOW READING</p>
@@ -161,11 +157,10 @@ function StreamReader() {
         </div>
       )}
 
-      {/* Queue — always visible */}
       <div className="border border-border bg-card/20">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <p className="font-display text-xs tracking-widest text-muted-foreground">
-            QUEUE — {queue.length} pending
+            APPROVED QUEUE — {queue.length} pending
           </p>
           {queue.length > 0 && !reading && (
             <p className="text-xs font-mono text-primary/60">Hit START READING to play</p>
@@ -189,6 +184,86 @@ function StreamReader() {
           </ol>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Moderation ───────────────────────────────────────────────────
+function Moderation({ secret }: { secret: string }) {
+  const [pending, setPending] = useState<Message[]>([]);
+  const [acting, setActing] = useState<Record<number, boolean>>({});
+
+  async function fetchPending() {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("status", "pending")
+      .order("id", { ascending: true });
+    setPending(data ?? []);
+  }
+
+  useEffect(() => {
+    fetchPending();
+    const interval = setInterval(fetchPending, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function moderate(id: number, action: "approve" | "decline") {
+    setActing((prev) => ({ ...prev, [id]: true }));
+    try {
+      await fetch("/api/admin/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret, id, action }),
+      });
+      setPending((prev) => prev.filter((m) => m.id !== id));
+    } finally {
+      setActing((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-muted-foreground text-sm font-mono">
+        {pending.length === 0
+          ? "No messages waiting for review."
+          : `${pending.length} message${pending.length !== 1 ? "s" : ""} waiting — APPROVE to send to stream, DECLINE to discard.`}
+      </p>
+
+      {pending.length === 0 ? (
+        <div className="border border-border bg-card/20 py-16 text-center">
+          <p className="text-muted-foreground font-mono text-sm">Nothing to review right now.</p>
+        </div>
+      ) : (
+        <div className="border border-border divide-y divide-border">
+          {pending.map((m) => (
+            <div key={m.id} className="px-4 py-4 flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-foreground break-words">{m.msg}</p>
+                {m.sound && (
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">🔊 {m.sound}</p>
+                )}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  disabled={acting[m.id]}
+                  onClick={() => moderate(m.id, "approve")}
+                  className="font-display font-bold tracking-widest px-4 py-2 text-xs bg-primary text-black hover:bg-primary/80 transition-colors disabled:opacity-40 shadow-[0_0_10px_rgba(0,255,255,0.2)]"
+                >
+                  APPROVE
+                </button>
+                <button
+                  disabled={acting[m.id]}
+                  onClick={() => moderate(m.id, "decline")}
+                  className="font-display font-bold tracking-widest px-4 py-2 text-xs bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-40"
+                >
+                  DECLINE
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -254,7 +329,7 @@ function EmailList({ secret }: { secret: string }) {
 export default function Admin() {
   const [secret, setSecret] = useState("");
   const [authed, setAuthed] = useState(false);
-  const [tab, setTab] = useState<"stream" | "emails">("stream");
+  const [tab, setTab] = useState<"stream" | "moderation" | "emails">("moderation");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -310,6 +385,12 @@ export default function Admin() {
     );
   }
 
+  const tabs = [
+    { key: "moderation" as const, label: "MODERATION" },
+    { key: "stream" as const, label: "STREAM READER" },
+    { key: "emails" as const, label: "EMAIL LIST" },
+  ];
+
   return (
     <div className="min-h-[100dvh] bg-background text-foreground px-6 py-12">
       <div className="max-w-4xl mx-auto">
@@ -318,24 +399,25 @@ export default function Admin() {
           LEON<span className="text-primary">BLOX</span> ADMIN
         </h1>
 
-        {/* Tabs */}
         <div className="flex border-b border-border mb-8">
-          {(["stream", "emails"] as const).map((t) => (
+          {tabs.map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={t.key}
+              onClick={() => setTab(t.key)}
               className={`font-display text-sm tracking-widest px-6 py-3 transition-colors ${
-                tab === t
+                tab === t.key
                   ? "text-primary border-b-2 border-primary -mb-px"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t === "stream" ? "STREAM READER" : "EMAIL LIST"}
+              {t.label}
             </button>
           ))}
         </div>
 
-        {tab === "stream" ? <StreamReader /> : <EmailList secret={secret} />}
+        {tab === "moderation" && <Moderation secret={secret} />}
+        {tab === "stream" && <StreamReader />}
+        {tab === "emails" && <EmailList secret={secret} />}
 
       </div>
     </div>
