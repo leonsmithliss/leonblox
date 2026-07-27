@@ -105,25 +105,42 @@ router.get("/youtube-stats", async (req, res) => {
     if (!item) throw new Error("No channel data returned from YouTube API");
 
     const subscribers = parseInt(item.statistics?.subscriberCount ?? "0", 10);
-    // Channel-level viewCount is what YouTube shows on the channel page — use it directly.
-    const views = parseInt(item.statistics?.viewCount ?? "0", 10);
+    let views = parseInt(item.statistics?.viewCount ?? "0", 10);
     let likes = 0;
     let comments = 0;
 
-    // Only try Analytics API for likes/comments (OAuth required).
-    // Do NOT fall back to summing all videos — that inflates numbers massively.
     if (hasOAuth) {
       try {
         const accessToken = await getAccessToken();
         const analyticsStats = await getAnalyticsStats(accessToken);
+        views = analyticsStats.views;
         likes = analyticsStats.likes;
         comments = analyticsStats.comments;
-        req.log.info({ likes, comments }, "Using YouTube Analytics API for likes/comments");
+        req.log.info({ views, likes, comments }, "Using YouTube Analytics API");
       } catch (analyticsErr) {
-        req.log.warn({ err: analyticsErr }, "Analytics API failed — likes/comments will use frontend fallback");
-        // Leave likes=0, comments=0 so frontend shows hardcoded fallback values
+        req.log.warn({ err: analyticsErr }, "Analytics API failed, falling back to Data API for all stats");
+        const uploadsPlaylistId = item.contentDetails?.relatedPlaylists?.uploads;
+        if (uploadsPlaylistId) {
+          const videoIds = await fetchAllVideoIds(apiKey, uploadsPlaylistId);
+          const totals = await fetchVideoStatsTotal(apiKey, videoIds);
+          views = totals.views;
+          likes = totals.likes;
+          comments = totals.comments;
+        }
+      }
+    } else {
+      const uploadsPlaylistId = item.contentDetails?.relatedPlaylists?.uploads;
+      if (uploadsPlaylistId) {
+        const videoIds = await fetchAllVideoIds(apiKey, uploadsPlaylistId);
+        const totals = await fetchVideoStatsTotal(apiKey, videoIds);
+        views = totals.views;
+        likes = totals.likes;
+        comments = totals.comments;
       }
     }
+
+    const viewsOverride = process.env.YOUTUBE_VIEWS_OVERRIDE;
+    if (viewsOverride) views = parseInt(viewsOverride, 10);
 
     cache = { subscribers, views, likes, comments };
     cacheExpiresAt = Date.now() + CACHE_TTL_MS;
