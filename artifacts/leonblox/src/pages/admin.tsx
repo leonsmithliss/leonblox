@@ -41,6 +41,49 @@ function formatDate(iso: string) {
   );
 }
 
+// ─── Sound Auto-Player ───────────────────────────────────────────
+// Runs always-on once admin is logged in; plays sound effects immediately.
+function useSoundAutoPlayer() {
+  const playingRef = useRef(false);
+
+  useEffect(() => {
+    async function checkAndPlay() {
+      if (playingRef.current) return;
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("status", "approved")
+        .eq("played", false)
+        .not("sound", "is", null)
+        .order("id", { ascending: true })
+        .limit(1);
+
+      if (!data || data.length === 0) return;
+      const m = data[0];
+      if (!m.sound || !SOUND_MAP[m.sound]) {
+        // mark played so we don't loop on unknown sounds
+        await supabase.from("messages").update({ played: true }).eq("id", m.id);
+        return;
+      }
+
+      playingRef.current = true;
+      // Mark played before playing to prevent double-play
+      await supabase.from("messages").update({ played: true }).eq("id", m.id);
+      const audio = new Audio(SOUND_MAP[m.sound]);
+      audio.volume = 1;
+      await audio.play().catch(() => {});
+      await new Promise<void>((res) => {
+        audio.onended = () => res();
+        setTimeout(res, 6000);
+      });
+      playingRef.current = false;
+    }
+
+    const interval = setInterval(checkAndPlay, 1500);
+    return () => clearInterval(interval);
+  }, []);
+}
+
 // ─── Stream Reader ────────────────────────────────────────────────
 function StreamReader() {
   const [nowReading, setNowReading] = useState("Nothing yet...");
@@ -329,6 +372,9 @@ function EmailList({ secret }: { secret: string }) {
 export default function Admin() {
   const [secret, setSecret] = useState("");
   const [authed, setAuthed] = useState(false);
+
+  // Auto-play sound effects as soon as they're approved — no button needed
+  useSoundAutoPlayer();
   const [tab, setTab] = useState<"stream" | "moderation" | "emails">("moderation");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

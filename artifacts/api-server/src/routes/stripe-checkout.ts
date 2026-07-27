@@ -80,12 +80,18 @@ router.get("/stripe/verify-payment", async (req, res) => {
     const { error } = await supabaseAdmin
       .from("messages")
       .insert([{ msg: message + ". From " + name, played: false, status: "pending" }]);
-    if (error) req.log.error({ error }, "Supabase insert failed after payment");
+    if (error) {
+      req.log.error({ error }, "Supabase insert failed after payment");
+      return res.status(500).json({ ok: false, error: "Failed to save message: " + error.message });
+    }
   } else if (type === "sound" && soundKey) {
     const { error } = await supabaseAdmin
       .from("messages")
       .insert([{ msg: "", sound: soundKey, played: false, status: "approved" }]);
-    if (error) req.log.error({ error }, "Supabase insert failed after payment");
+    if (error) {
+      req.log.error({ error }, "Supabase insert failed after payment");
+      return res.status(500).json({ ok: false, error: "Failed to save sound: " + error.message });
+    }
   }
 
   res.json({ ok: true, type, meta });

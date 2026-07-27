@@ -16,12 +16,13 @@ export default function MessageSuccess() {
     if (!sessionId) { setStatus("error"); return; }
 
     fetch(`/api/stripe/verify-payment?session_id=${encodeURIComponent(sessionId)}`)
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json();
         if (data.ok) {
           setType(data.type ?? "message");
           setStatus("success");
         } else {
+          console.error("Payment verify failed:", data.error);
           setStatus("error");
         }
       })
