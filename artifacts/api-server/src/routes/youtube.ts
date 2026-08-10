@@ -88,9 +88,13 @@ router.get("/youtube-stats", async (req, res) => {
   }
 
   try {
-    const channelId = process.env.YOUTUBE_CHANNEL_ID ?? "UCbFQZPkuFWjp_Zf_Czh0tLQ";
+    // Prefer handle-based lookup (always correct); fall back to explicit ID env var
+    const channelId = process.env.YOUTUBE_CHANNEL_ID;
+    const channelLookupParam = channelId
+      ? `id=${channelId}`
+      : `forHandle=${encodeURIComponent(handle)}`;
     const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&id=${channelId}&key=${apiKey}`
+      `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&${channelLookupParam}&key=${apiKey}`
     );
     if (!channelRes.ok) throw new Error(`YouTube API returned ${channelRes.status}`);
 
@@ -105,7 +109,8 @@ router.get("/youtube-stats", async (req, res) => {
     if (!item) throw new Error("No channel data returned from YouTube API");
 
     const subscribers = parseInt(item.statistics?.subscriberCount ?? "0", 10);
-    let views = parseInt(item.statistics?.viewCount ?? "0", 10);
+    const channelViewCount = parseInt(item.statistics?.viewCount ?? "0", 10);
+    let views = channelViewCount;
     let likes = 0;
     let comments = 0;
 
@@ -123,6 +128,7 @@ router.get("/youtube-stats", async (req, res) => {
         if (uploadsPlaylistId) {
           const videoIds = await fetchAllVideoIds(apiKey, uploadsPlaylistId);
           const totals = await fetchVideoStatsTotal(apiKey, videoIds);
+          req.log.info({ channelViewCount, perVideoViews: totals.views, perVideoLikes: totals.likes, perVideoComments: totals.comments }, "Data API fallback stats");
           views = totals.views;
           likes = totals.likes;
           comments = totals.comments;
@@ -133,6 +139,7 @@ router.get("/youtube-stats", async (req, res) => {
       if (uploadsPlaylistId) {
         const videoIds = await fetchAllVideoIds(apiKey, uploadsPlaylistId);
         const totals = await fetchVideoStatsTotal(apiKey, videoIds);
+        req.log.info({ channelViewCount, perVideoViews: totals.views, perVideoLikes: totals.likes, perVideoComments: totals.comments }, "Data API stats (no OAuth)");
         views = totals.views;
         likes = totals.likes;
         comments = totals.comments;
@@ -140,7 +147,11 @@ router.get("/youtube-stats", async (req, res) => {
     }
 
     const viewsOverride = process.env.YOUTUBE_VIEWS_OVERRIDE;
+    const likesOverride = process.env.YOUTUBE_LIKES_OVERRIDE;
+    const commentsOverride = process.env.YOUTUBE_COMMENTS_OVERRIDE;
     if (viewsOverride) views = parseInt(viewsOverride, 10);
+    if (likesOverride) likes = parseInt(likesOverride, 10);
+    if (commentsOverride) comments = parseInt(commentsOverride, 10);
 
     cache = { subscribers, views, likes, comments };
     cacheExpiresAt = Date.now() + CACHE_TTL_MS;
