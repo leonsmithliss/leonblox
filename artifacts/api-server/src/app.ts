@@ -38,6 +38,13 @@ app.post(
     const signature = req.headers["stripe-signature"];
     if (!signature) return res.status(400).json({ error: "Missing stripe-signature" });
 
+    // stripe-replit-sync requires DATABASE_URL which is only available in Replit dev.
+    // On Render (production) we acknowledge the event and skip the sync — the actual
+    // payment flow runs through /api/stripe/verify-payment instead.
+    if (!process.env.DATABASE_URL) {
+      return res.status(200).json({ received: true, note: "sync skipped — no DATABASE_URL" });
+    }
+
     try {
       const sig = Array.isArray(signature) ? signature[0] : signature;
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
