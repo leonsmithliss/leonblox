@@ -68,17 +68,28 @@ function timeAgo(iso: string): string {
 function Home() {
   const [ytStats, setYtStats] = useState<{ subscribers: string; views: string; likes: string; comments: string } | null>(null);
   useEffect(() => {
-    fetch("/api/youtube-stats")
-      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then((data: { subscribers: number; views: number; likes: number; comments: number }) => {
-        setYtStats({
-          subscribers: formatStat(data.subscribers),
-          views: formatStat(data.views),
-          likes: data.likes > 0 ? formatStat(data.likes) : "43.7K+",
-          comments: data.comments > 0 ? formatStat(data.comments) : "1.8K",
-        });
-      })
-      .catch(() => {});
+    let active = true;
+    const loadStats = () => {
+      fetch("/api/youtube-stats")
+        .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+        .then((data: { subscribers: number; views: number; likes: number; comments: number }) => {
+          if (!active) return;
+          setYtStats({
+            subscribers: formatStat(data.subscribers),
+            views: formatStat(data.views),
+            likes: data.likes > 0 ? formatStat(data.likes) : "43.7K+",
+            comments: data.comments > 0 ? formatStat(data.comments) : "1.8K",
+          });
+        })
+        .catch(() => {});
+    };
+
+    loadStats();
+    const refreshInterval = window.setInterval(loadStats, 5 * 60 * 1000);
+    return () => {
+      active = false;
+      window.clearInterval(refreshInterval);
+    };
   }, []);
 
   return (

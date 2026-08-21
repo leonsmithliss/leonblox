@@ -2,7 +2,6 @@ import { Router, type IRouter } from "express";
 
 const router: IRouter = Router();
 
-const REDIRECT_URI = `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/youtube/callback`;
 const SCOPES = [
   "https://www.googleapis.com/auth/yt-analytics.readonly",
   "https://www.googleapis.com/auth/youtube.readonly",
@@ -10,6 +9,8 @@ const SCOPES = [
 
 router.get("/auth/youtube", (_req, res) => {
   const clientId = process.env.YOUTUBE_OAUTH_CLIENT_ID;
+  const redirectUri = process.env.YOUTUBE_OAUTH_REDIRECT_URI
+    ?? `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/youtube/callback`;
   if (!clientId) {
     res.status(500).send("YOUTUBE_OAUTH_CLIENT_ID secret is not set.");
     return;
@@ -17,7 +18,7 @@ router.get("/auth/youtube", (_req, res) => {
 
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", REDIRECT_URI);
+  url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", SCOPES);
   url.searchParams.set("access_type", "offline");
@@ -28,6 +29,8 @@ router.get("/auth/youtube", (_req, res) => {
 
 router.get("/auth/youtube/callback", async (req, res) => {
   const { code, error } = req.query as { code?: string; error?: string };
+  const redirectUri = process.env.YOUTUBE_OAUTH_REDIRECT_URI
+    ?? `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/youtube/callback`;
 
   if (error || !code) {
     res.status(400).send(`OAuth error: ${error ?? "no code returned"}`);
@@ -50,7 +53,7 @@ router.get("/auth/youtube/callback", async (req, res) => {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: REDIRECT_URI,
+        redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
     });
