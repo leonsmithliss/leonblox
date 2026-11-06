@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -8,10 +8,8 @@ import {
   Clock3,
   Gamepad2,
   Heart,
-  Medal,
   Play,
   RefreshCw,
-  Search,
   Sparkles,
   Trophy,
   Users,
@@ -19,7 +17,6 @@ import {
 import SiteFooter from "@/components/site-footer";
 import SiteNav from "@/components/site-nav";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 type RobloxGame = {
   id: number;
@@ -48,7 +45,6 @@ type RobloxPortfolio = {
 };
 
 type PortfolioTab = "games" | "milestones";
-type GameFilter = "all" | "creator" | "studio";
 
 const userReportedMilestones = [
   {
@@ -58,14 +54,6 @@ const userReportedMilestones = [
     detail: "Combined visits across all of Leon's Roblox games.",
     accent: "from-cyan-400/25 to-blue-500/5",
     tag: "COMMUNITY MILESTONE",
-  },
-  {
-    icon: Medal,
-    number: "80.6K+",
-    title: "Shooting Arena visits",
-    detail: "Visit count shown in the Roblox Creator Dashboard screenshot.",
-    accent: "from-violet-500/25 to-fuchsia-500/5",
-    tag: "FEATURED GAME",
   },
 ];
 
@@ -88,6 +76,29 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+function AnimatedVisitCount() {
+  const count = useMotionValue(0);
+  const prefersReducedMotion = useReducedMotion();
+  const displayCount = useTransform(count, (latest) => {
+    const value = Math.floor(latest);
+    return value < 1000 ? fullNumber(value) : `${Math.floor(value / 1000)}K`;
+  });
+
+  useEffect(() => {
+    const controls = animate(count, 500_000, {
+      duration: prefersReducedMotion ? 0 : 1.65,
+      ease: "easeOut",
+    });
+    return () => controls.stop();
+  }, [count, prefersReducedMotion]);
+
+  return (
+    <motion.span aria-label="At least 500,000 visits combined across all Roblox games" data-testid="counter-total-game-visits">
+      {displayCount}
+    </motion.span>
+  );
 }
 
 function GameCard({ game, index }: { game: RobloxGame; index: number }) {
@@ -192,8 +203,6 @@ function RobloxGamesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<PortfolioTab>("games");
-  const [filter, setFilter] = useState<GameFilter>("all");
-  const [search, setSearch] = useState("");
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
@@ -202,7 +211,7 @@ function RobloxGamesPage() {
       setIsLoading(true);
       setError("");
       try {
-        const response = await fetch("/api/roblox-games");
+        const response = await fetch("/api/roblox-games", { cache: "no-store" });
         if (!response.ok) throw new Error("Roblox game data is temporarily unavailable.");
         const data = (await response.json()) as RobloxPortfolio;
         if (active) setPortfolio(data);
@@ -221,24 +230,9 @@ function RobloxGamesPage() {
     };
   }, [retryKey]);
 
-  const visibleGames = useMemo(() => {
-    const games = portfolio?.games ?? [];
-    return games.filter((game) => {
-      const matchesFilter =
-        filter === "all" ||
-        (filter === "creator" && game.creatorType === "User") ||
-        (filter === "studio" && game.creatorType === "Group");
-      return matchesFilter && game.name.toLowerCase().includes(search.trim().toLowerCase());
-    });
-  }, [filter, portfolio, search]);
-
+  const visibleGames = portfolio?.games ?? [];
   const earliestGame = portfolio?.games[0];
   const latestUpdate = portfolio?.updatedAt ? formatDate(portfolio.updatedAt) : null;
-  const filters: { key: GameFilter; label: string }[] = [
-    { key: "all", label: "All games" },
-    { key: "creator", label: "LeonBloxOfficial" },
-    { key: "studio", label: "LeonBloxStudios" },
-  ];
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#080e16] text-white">
@@ -267,7 +261,7 @@ function RobloxGamesPage() {
                 </span>
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300/75 sm:text-lg">
-                Explore the Roblox experiences created by LeonBloxOfficial and LeonBloxStudios — from the earliest builds to the newest releases.
+                Five handpicked Roblox experiences, from the earliest build to the newest release.
               </p>
             </div>
 
@@ -282,56 +276,47 @@ function RobloxGamesPage() {
             </a>
           </motion.div>
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-3">
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="rounded-2xl border border-cyan-200/15 bg-gradient-to-br from-cyan-400/[0.13] to-slate-950/60 p-5 sm:p-6"
-              data-testid="stat-total-game-visits"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-300">All-time game visits</span>
-                <Trophy className="h-5 w-5 text-cyan-200" />
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#111825]/95 via-[#0d131d]/95 to-[#131125]/95 shadow-[0_24px_90px_rgba(0,0,0,0.28)]"
+            data-testid="stats-portfolio-summary"
+          >
+            <div className="grid divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+              <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 shadow-[0_0_28px_rgba(34,211,238,0.12)]">
+                  <Trophy className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl" aria-live="polite">
+                    <AnimatedVisitCount /><span className="text-cyan-300">+</span>
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Combined game visits</p>
+                </div>
               </div>
-              <p className="mt-3 text-4xl font-black tracking-tight">500K<span className="text-cyan-300">+</span></p>
-              <p className="mt-1 text-xs text-slate-400">Combined across all Roblox games</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 sm:p-6"
-              data-testid="stat-public-experiences"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-300">Public experiences</span>
-                <Gamepad2 className="h-5 w-5 text-violet-300" />
+              <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-300/10 text-violet-200 shadow-[0_0_28px_rgba(167,139,250,0.1)]">
+                  <Gamepad2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl">5</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Featured experiences</p>
+                </div>
               </div>
-              <p className="mt-3 text-4xl font-black tracking-tight">
-                {isLoading ? "—" : `${portfolio?.games.length ?? 0}`}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">Across the profile and studio</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.26 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 sm:p-6"
-              data-testid="stat-studio-members"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-300">Studio community</span>
-                <Users className="h-5 w-5 text-pink-300" />
+              <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/10 text-pink-200 shadow-[0_0_28px_rgba(244,114,182,0.1)]">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl">
+                    {portfolio?.groupMemberCount ? `${compactNumber(portfolio.groupMemberCount)}+` : "59.8K+"}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Studio community members</p>
+                </div>
               </div>
-              <p className="mt-3 text-4xl font-black tracking-tight">
-                {portfolio?.groupMemberCount ? `${compactNumber(portfolio.groupMemberCount)}+` : "—"}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">Members in LeonBloxStudios</p>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
 
           <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-b border-white/10">
             <div className="flex gap-2">
@@ -366,49 +351,22 @@ function RobloxGamesPage() {
 
           {activeTab === "games" ? (
             <section className="pt-8" aria-label="Roblox game collection">
-              <div className="mb-7 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+              <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-cyan-200">
                     <ArrowDown className="h-4 w-4" />
                     OLDEST TO NEWEST
                   </div>
-                  <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">The game library</h2>
+                  <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Featured games</h2>
                   <p className="mt-2 text-sm text-slate-400">
-                    Live public stats and game icons pulled from Roblox.
+                    Five selected experiences, with live stats and icons from Roblox.
                   </p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <label className="relative block sm:w-64">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Find a game..."
-                      aria-label="Find a Roblox game"
-                      data-testid="input-search-games"
-                      className="h-11 border-white/10 bg-white/[0.05] pl-9 text-white placeholder:text-slate-500 focus-visible:ring-cyan-300/50"
-                    />
-                  </label>
-                  <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] p-1">
-                    {filters.map((option) => (
-                      <button
-                        type="button"
-                        key={option.key}
-                        onClick={() => setFilter(option.key)}
-                        aria-pressed={filter === option.key}
-                        data-testid={`filter-games-${option.key}`}
-                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${filter === option.key ? "bg-cyan-300 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
 
               {isLoading && (
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                  {Array.from({ length: 6 }, (_, index) => (
+                  {Array.from({ length: 5 }, (_, index) => (
                     <div key={index} className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
                       <div className="aspect-[16/10] bg-white/[0.06]" />
                       <div className="space-y-3 p-5">
@@ -446,16 +404,16 @@ function RobloxGamesPage() {
 
               {!isLoading && !error && visibleGames.length === 0 && (
                 <div className="rounded-2xl border border-white/10 bg-white/[0.035] py-16 text-center" data-testid="status-no-games">
-                  <Search className="mx-auto h-8 w-8 text-slate-500" />
-                  <p className="mt-3 font-semibold text-white">No games match that search.</p>
-                  <p className="mt-1 text-sm text-slate-400">Try another title or switch the creator filter.</p>
+                  <Gamepad2 className="mx-auto h-8 w-8 text-slate-500" />
+                  <p className="mt-3 font-semibold text-white">The selected games aren’t available right now.</p>
+                  <p className="mt-1 text-sm text-slate-400">Roblox may be temporarily unavailable. Try again shortly.</p>
                 </div>
               )}
 
               {!isLoading && !error && earliestGame && (
                 <p className="mt-7 flex items-center gap-2 text-xs text-slate-500">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  Earliest public experience listed: {earliestGame.name}, {formatDate(earliestGame.created)}.
+                  Oldest featured experience: {earliestGame.name}, {formatDate(earliestGame.created)}.
                 </p>
               )}
             </section>
@@ -472,7 +430,7 @@ function RobloxGamesPage() {
                 </div>
                 <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Wins worth celebrating</h2>
                 <p className="mt-3 leading-relaxed text-slate-300/70">
-                  A few landmarks from the creator journey, alongside the public Roblox catalog.
+                  Milestones from across the Roblox creator journey.
                 </p>
               </motion.div>
 
@@ -554,11 +512,11 @@ function RobloxGamesPage() {
                   <p className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
                     {isLoading ? "—" : `${portfolio?.games.length ?? 0}`}
                   </p>
-                  <h3 className="mt-2 text-xl font-bold">Public experiences in the library</h3>
+                  <h3 className="mt-2 text-xl font-bold">Featured experiences</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-300/70">
                     {earliestGame
-                      ? `The earliest currently listed public game is ${earliestGame.name}, created ${formatDate(earliestGame.created)}.`
-                      : "The public games are listed from the earliest creation date to the newest."}
+                      ? `The oldest featured game is ${earliestGame.name}, created ${formatDate(earliestGame.created)}.`
+                      : "The selected games are listed from the earliest creation date to the newest."}
                   </p>
                   <button
                     type="button"
@@ -574,7 +532,7 @@ function RobloxGamesPage() {
               <div className="mt-8 flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-4 text-xs leading-relaxed text-slate-400">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
                 <p>
-                  Individual game stats and group membership come from Roblox’s public APIs. The 500K+ figure is your combined total across all Roblox games, and the Shooting Arena figure is from your screenshot. Roblox’s public catalog does not expose a complete historical visit total for every creator game.
+                  Game icons, individual stats, and group membership come from Roblox’s public APIs. The 500K+ figure is the combined visit milestone across all your Roblox games.
                 </p>
               </div>
             </section>

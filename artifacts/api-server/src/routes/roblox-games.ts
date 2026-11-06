@@ -5,6 +5,13 @@ const router: IRouter = Router();
 const CREATOR_ID = 1512057012;
 const STUDIO_GROUP_ID = 173769384;
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const FEATURED_GAME_PLACE_IDS = new Set([
+  132710196490511, // Wash Cars
+  128894988008491, // Roadster Vs Cops
+  112922142920016, // Deep Dive Dubai
+  99657258105359, // Math Island
+  81170019381237, // +1 Speed Needoh Escape
+]);
 
 interface CatalogGame {
   id: number;
@@ -116,7 +123,10 @@ async function buildPortfolio(): Promise<RobloxPortfolio> {
 
   const uniqueGames = Array.from(
     new Map(catalogGames.map((game) => [game.id, game])).values(),
-  );
+  ).filter((game) => FEATURED_GAME_PLACE_IDS.has(game.rootPlace?.id ?? 0));
+  if (uniqueGames.length === 0) {
+    throw new Error("None of the selected public Roblox experiences were returned");
+  }
   const ids = uniqueGames.map((game) => game.id);
 
   const [detailsResult, thumbnailsResult, groupResult] = await Promise.allSettled([
@@ -180,8 +190,8 @@ async function buildPortfolio(): Promise<RobloxPortfolio> {
 }
 
 router.get("/roblox-games", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   if (cache && Date.now() < cacheExpiresAt) {
-    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.json(cache);
     return;
   }
@@ -189,7 +199,6 @@ router.get("/roblox-games", async (req, res) => {
   try {
     cache = await buildPortfolio();
     cacheExpiresAt = Date.now() + CACHE_TTL_MS;
-    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.json(cache);
   } catch (error) {
     req.log.error({ err: error }, "Failed to fetch Roblox games");
