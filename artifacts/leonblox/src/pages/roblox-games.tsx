@@ -5,8 +5,6 @@ import {
   Check,
   Clock3,
   Gamepad2,
-  Heart,
-  Play,
   RefreshCw,
   Sparkles,
   Trophy,
@@ -173,9 +171,6 @@ function GameCard({ game, index }: { game: RobloxGame; index: number }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
           <div className="absolute left-4 top-4 flex items-center gap-2">
-            <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1 text-[10px] font-bold tracking-[0.16em] text-white backdrop-blur">
-              {game.creatorType === "Group" ? "STUDIO" : "CREATOR"}
-            </span>
             {game.playing > 0 && (
               <span className="flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-950/70 px-2.5 py-1 text-xs font-semibold text-emerald-200">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
@@ -196,34 +191,14 @@ function GameCard({ game, index }: { game: RobloxGame; index: number }) {
 
       <div className="p-4 sm:p-5">
         {game.description ? (
-          <p className="mb-4 line-clamp-2 min-h-10 text-sm leading-relaxed text-slate-300/70">
+          <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-slate-300/70">
             {game.description}
           </p>
         ) : (
-          <p className="mb-4 min-h-10 text-sm leading-relaxed text-slate-300/45">
+          <p className="min-h-10 text-sm leading-relaxed text-slate-300/45">
             A Roblox experience by LeonBlox.
           </p>
         )}
-        <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">VISITS</p>
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white">
-              <Play className="h-3.5 w-3.5 text-cyan-300" />
-              {compactNumber(game.visits)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">FAVORITES</p>
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white">
-              <Heart className="h-3.5 w-3.5 text-pink-300" />
-              {compactNumber(game.favorites)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">GENRE</p>
-            <p className="mt-1 truncate text-sm font-bold text-white">{game.genre || "Roblox"}</p>
-          </div>
-        </div>
       </div>
     </motion.article>
   );
@@ -314,7 +289,7 @@ function RobloxGamesPage() {
             className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#111825]/95 via-[#0d131d]/95 to-[#131125]/95 shadow-[0_24px_90px_rgba(0,0,0,0.28)]"
             data-testid="stats-portfolio-summary"
           >
-            <div className="grid divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <div className="grid divide-y divide-white/10 md:grid-cols-2 md:divide-x md:divide-y-0">
               <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 shadow-[0_0_28px_rgba(34,211,238,0.12)]">
                   <Trophy className="h-5 w-5" />
@@ -327,15 +302,6 @@ function RobloxGamesPage() {
                 </div>
               </div>
               <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-300/10 text-violet-200 shadow-[0_0_28px_rgba(167,139,250,0.1)]">
-                  <Gamepad2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-3xl font-black tracking-tight sm:text-4xl">5</p>
-                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Featured experiences</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center gap-4 px-5 py-6 sm:py-7">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/10 text-pink-200 shadow-[0_0_28px_rgba(244,114,182,0.1)]">
                   <Users className="h-5 w-5" />
                 </div>
@@ -343,7 +309,7 @@ function RobloxGamesPage() {
                   <p className="text-3xl font-black tracking-tight sm:text-4xl">
                     {portfolio?.groupMemberCount ? `${compactNumber(portfolio.groupMemberCount)}+` : "59.8K+"}
                   </p>
-                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Studio community members</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">Group Members</p>
                 </div>
               </div>
             </div>
@@ -389,7 +355,7 @@ function RobloxGamesPage() {
                   </div>
                   <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Featured games</h2>
                   <p className="mt-2 text-sm text-slate-400">
-                    Five selected experiences, with live stats and icons from Roblox.
+                    Five selected experiences. Choose a game to play on Roblox.
                   </p>
                 </div>
               </div>
