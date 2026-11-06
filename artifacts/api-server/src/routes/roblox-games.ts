@@ -5,13 +5,13 @@ const router: IRouter = Router();
 const CREATOR_ID = 1512057012;
 const STUDIO_GROUP_ID = 173769384;
 const CACHE_TTL_MS = 10 * 60 * 1000;
-const FEATURED_GAME_PLACE_IDS = new Set([
+const FEATURED_GAME_ORDER = [
   132710196490511, // Wash Cars
   128894988008491, // Roadster Vs Cops
   112922142920016, // Deep Dive Dubai
   99657258105359, // Math Island
   81170019381237, // +1 Speed Needoh Escape
-]);
+];
 
 interface CatalogGame {
   id: number;
@@ -123,7 +123,7 @@ async function buildPortfolio(): Promise<RobloxPortfolio> {
 
   const uniqueGames = Array.from(
     new Map(catalogGames.map((game) => [game.id, game])).values(),
-  ).filter((game) => FEATURED_GAME_PLACE_IDS.has(game.rootPlace?.id ?? 0));
+  ).filter((game) => FEATURED_GAME_ORDER.includes(game.rootPlace?.id ?? 0));
   if (uniqueGames.length === 0) {
     throw new Error("None of the selected public Roblox experiences were returned");
   }
@@ -177,7 +177,11 @@ async function buildPortfolio(): Promise<RobloxPortfolio> {
         creatorType: game.creator?.type === "Group" ? "Group" : "User",
       };
     })
-    .sort((a, b) => Date.parse(a.created) - Date.parse(b.created));
+    .sort(
+      (a, b) =>
+        FEATURED_GAME_ORDER.indexOf(a.rootPlaceId) -
+        FEATURED_GAME_ORDER.indexOf(b.rootPlaceId),
+    );
 
   return {
     games,

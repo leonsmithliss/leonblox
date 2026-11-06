@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import {
-  ArrowDown,
   ArrowUpRight,
-  CalendarDays,
   Check,
   Clock3,
   Gamepad2,
@@ -54,6 +52,40 @@ const userReportedMilestones = [
     detail: "Combined visits across all of Leon's Roblox games.",
     accent: "from-cyan-400/25 to-blue-500/5",
     tag: "COMMUNITY MILESTONE",
+  },
+];
+
+const winScreenshotsBase = `${import.meta.env.BASE_URL}images/roblox-wins/`;
+const robloxWinScreenshots = [
+  {
+    src: `${winScreenshotsBase}shooting-arena-overview.webp`,
+    alt: "Shooting Arena Creator Dashboard overview showing realtime analytics",
+    title: "Shooting Arena — realtime analytics",
+    detail: "The dashboard snapshot shows 734 concurrent users, 3.1-minute session time, and a 1.68% client crash rate.",
+  },
+  {
+    src: `${winScreenshotsBase}robux-activity.webp`,
+    alt: "Roblox Creator Dashboard chart for daily Robux spent",
+    title: "Robux activity",
+    detail: "12,788 Robux spent over the selected period, averaging 441 per day.",
+  },
+  {
+    src: `${winScreenshotsBase}shooting-arena-visits.webp`,
+    alt: "Shooting Arena Creator Dashboard showing 80.6K visits and active users",
+    title: "80.6K+ Shooting Arena visits",
+    detail: "The Creator Dashboard snapshot also shows 978 active users.",
+  },
+  {
+    src: `${winScreenshotsBase}pending-robux.webp`,
+    alt: "Roblox Creator Dashboard showing 132,935 pending Robux",
+    title: "132,935 pending Robux",
+    detail: "Pending Robux amount shown in the Creator Dashboard screenshot.",
+  },
+  {
+    src: `${winScreenshotsBase}studio-community.webp`,
+    alt: "LeonBloxStudios Roblox community profile showing 59.8K members",
+    title: "LeonBloxStudios community",
+    detail: "Your Roblox studio group profile, shown with 59.8K+ members.",
   },
 ];
 
@@ -153,7 +185,6 @@ function GameCard({ game, index }: { game: RobloxGame; index: number }) {
           </div>
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="mb-1 text-xs font-medium text-white/65">{formatDate(game.created)}</p>
               <h3 className="line-clamp-2 text-xl font-bold leading-tight text-white">{game.name}</h3>
             </div>
             <span className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur transition group-hover:bg-cyan-300 group-hover:text-slate-950">
@@ -231,7 +262,7 @@ function RobloxGamesPage() {
   }, [retryKey]);
 
   const visibleGames = portfolio?.games ?? [];
-  const earliestGame = portfolio?.games[0];
+  const firstOrderedGame = portfolio?.games[0];
   const latestUpdate = portfolio?.updatedAt ? formatDate(portfolio.updatedAt) : null;
 
   return (
@@ -261,7 +292,7 @@ function RobloxGamesPage() {
                 </span>
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300/75 sm:text-lg">
-                Five handpicked Roblox experiences, from the earliest build to the newest release.
+                Five handpicked Roblox experiences, arranged newest to oldest.
               </p>
             </div>
 
@@ -354,8 +385,7 @@ function RobloxGamesPage() {
               <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-cyan-200">
-                    <ArrowDown className="h-4 w-4" />
-                    OLDEST TO NEWEST
+                    NEWEST TO OLDEST
                   </div>
                   <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Featured games</h2>
                   <p className="mt-2 text-sm text-slate-400">
@@ -410,10 +440,9 @@ function RobloxGamesPage() {
                 </div>
               )}
 
-              {!isLoading && !error && earliestGame && (
-                <p className="mt-7 flex items-center gap-2 text-xs text-slate-500">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Oldest featured experience: {earliestGame.name}, {formatDate(earliestGame.created)}.
+              {!isLoading && !error && firstOrderedGame && (
+                <p className="mt-7 text-xs text-slate-500">
+                  Newest game in your selected order: {firstOrderedGame.name}.
                 </p>
               )}
             </section>
@@ -514,9 +543,9 @@ function RobloxGamesPage() {
                   </p>
                   <h3 className="mt-2 text-xl font-bold">Featured experiences</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-300/70">
-                    {earliestGame
-                      ? `The oldest featured game is ${earliestGame.name}, created ${formatDate(earliestGame.created)}.`
-                      : "The selected games are listed from the earliest creation date to the newest."}
+                    {firstOrderedGame
+                      ? `${firstOrderedGame.name} leads your selected newest-to-oldest game order.`
+                      : "Your selected games are arranged newest to oldest."}
                   </p>
                   <button
                     type="button"
@@ -527,6 +556,52 @@ function RobloxGamesPage() {
                     Browse the game library <ArrowUpRight className="h-4 w-4" />
                   </button>
                 </motion.article>
+              </div>
+
+              <div className="mt-14" aria-labelledby="roblox-wins-gallery-title">
+                <div className="mb-6">
+                  <p className="text-xs font-bold tracking-[0.2em] text-cyan-200">YOUR ROBLOX SCREENSHOTS</p>
+                  <h3 id="roblox-wins-gallery-title" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                    Wins from the creator dashboard
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300/70">
+                    Your Roblox analytics and LeonBloxStudios community screenshots, saved here as part of your milestones.
+                  </p>
+                </div>
+                <div className="grid gap-5 md:grid-cols-2">
+                  {robloxWinScreenshots.map((screenshot, index) => (
+                    <motion.figure
+                      key={screenshot.title}
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.4, delay: (index % 2) * 0.08 }}
+                      className={`overflow-hidden rounded-2xl border border-white/10 bg-[#101923] ${index === 2 || index === 3 ? "md:col-span-2" : ""}`}
+                      data-testid={`card-roblox-win-screenshot-${index}`}
+                    >
+                      <a
+                        href={screenshot.src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open full-size screenshot: ${screenshot.title}`}
+                        data-testid={`link-roblox-win-screenshot-${index}`}
+                        className="flex h-64 items-center justify-center overflow-hidden bg-black/50 p-3 sm:h-72"
+                      >
+                        <img
+                          src={screenshot.src}
+                          alt={screenshot.alt}
+                          loading="lazy"
+                          className="h-full w-full object-contain"
+                          data-testid={`img-roblox-win-screenshot-${index}`}
+                        />
+                      </a>
+                      <figcaption className="border-t border-white/10 px-5 py-4">
+                        <h4 className="font-bold text-white">{screenshot.title}</h4>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-300/70">{screenshot.detail}</p>
+                      </figcaption>
+                    </motion.figure>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-8 flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-4 text-xs leading-relaxed text-slate-400">
