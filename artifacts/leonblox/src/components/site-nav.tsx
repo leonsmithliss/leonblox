@@ -20,8 +20,9 @@ export default function SiteNav() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8 font-display text-sm font-semibold tracking-widest text-muted-foreground">
+        <nav className="hidden lg:flex items-center gap-4 font-display text-sm font-semibold tracking-widest text-muted-foreground">
           <Link href="/videos" className="hover:text-primary transition-colors">CONTENT</Link>
+          <Link href="/games" className="hover:text-primary transition-colors">GAMES</Link>
           <Link href="/upcoming" className="hover:text-primary transition-colors">UPCOMING</Link>
           <Link href="/message" className="hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" className="hover:text-primary transition-colors">MERCH</Link>
@@ -51,7 +52,7 @@ export default function SiteNav() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden text-foreground p-2"
+          className="lg:hidden text-foreground p-2"
           onClick={() => setMenuOpen((o) => !o)}
           aria-label="Toggle menu"
         >
@@ -61,8 +62,9 @@ export default function SiteNav() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-background border-t border-border flex flex-col font-display text-sm font-semibold tracking-widest">
+        <div className="lg:hidden bg-background border-t border-border flex flex-col font-display text-sm font-semibold tracking-widest">
           <Link href="/videos" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">CONTENT</Link>
+          <Link href="/games" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">ROBLOX GAMES</Link>
           <Link href="/upcoming" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">UPCOMING</Link>
           <Link href="/message" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">SEND A MESSAGE TO LIVESTREAM</Link>
           <Link href="/merch" onClick={() => setMenuOpen(false)} className="px-6 py-4 border-b border-border hover:text-primary transition-colors">MERCH</Link>

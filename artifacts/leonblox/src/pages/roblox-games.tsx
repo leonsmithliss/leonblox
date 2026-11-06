@@ -1,0 +1,590 @@
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowDown,
+  ArrowUpRight,
+  CalendarDays,
+  Check,
+  Clock3,
+  Gamepad2,
+  Heart,
+  Medal,
+  Play,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Trophy,
+  Users,
+} from "lucide-react";
+import SiteFooter from "@/components/site-footer";
+import SiteNav from "@/components/site-nav";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+type RobloxGame = {
+  id: number;
+  rootPlaceId: number;
+  name: string;
+  description: string;
+  created: string;
+  updated: string | null;
+  visits: number;
+  playing: number;
+  maxPlayers: number | null;
+  favorites: number;
+  genre: string | null;
+  subgenre: string | null;
+  icon: string | null;
+  creatorType: "User" | "Group";
+};
+
+type RobloxPortfolio = {
+  games: RobloxGame[];
+  creatorId: number;
+  groupId: number;
+  groupName: string;
+  groupMemberCount: number | null;
+  updatedAt: string;
+};
+
+type PortfolioTab = "games" | "milestones";
+type GameFilter = "all" | "creator" | "studio";
+
+const userReportedMilestones = [
+  {
+    icon: Trophy,
+    number: "500K+",
+    title: "Game visits",
+    detail: "Combined visits across all of Leon's Roblox games.",
+    accent: "from-cyan-400/25 to-blue-500/5",
+    tag: "COMMUNITY MILESTONE",
+  },
+  {
+    icon: Medal,
+    number: "80.6K+",
+    title: "Shooting Arena visits",
+    detail: "Visit count shown in the Roblox Creator Dashboard screenshot.",
+    accent: "from-violet-500/25 to-fuchsia-500/5",
+    tag: "FEATURED GAME",
+  },
+];
+
+function compactNumber(value: number): string {
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function fullNumber(value: number): string {
+  return new Intl.NumberFormat("en").format(value);
+}
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function GameCard({ game, index }: { game: RobloxGame; index: number }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  return (
+    <motion.article
+      data-testid={`card-roblox-game-${game.id}`}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.45, delay: Math.min((index % 4) * 0.06, 0.18) }}
+      className="group overflow-hidden rounded-2xl border border-white/10 bg-[#101923] shadow-[0_16px_55px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300/35 hover:shadow-[0_20px_65px_rgba(34,211,238,0.12)]"
+    >
+      <a
+        href={`https://www.roblox.com/games/${game.rootPlaceId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block"
+        aria-label={`Open ${game.name} on Roblox`}
+        data-testid={`link-roblox-game-${game.id}`}
+      >
+        <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-800 via-slate-900 to-cyan-950">
+          {game.icon && !imageFailed ? (
+            <img
+              src={game.icon}
+              alt={`${game.name} Roblox game icon`}
+              loading="lazy"
+              onError={() => setImageFailed(true)}
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              data-testid={`img-roblox-game-${game.id}`}
+            />
+          ) : (
+            <div
+              className="flex h-full items-center justify-center"
+              data-testid={`img-fallback-roblox-game-${game.id}`}
+            >
+              <Gamepad2 className="h-12 w-12 text-cyan-300/80" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+          <div className="absolute left-4 top-4 flex items-center gap-2">
+            <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1 text-[10px] font-bold tracking-[0.16em] text-white backdrop-blur">
+              {game.creatorType === "Group" ? "STUDIO" : "CREATOR"}
+            </span>
+            {game.playing > 0 && (
+              <span className="flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-950/70 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
+                {compactNumber(game.playing)} playing
+              </span>
+            )}
+          </div>
+          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="mb-1 text-xs font-medium text-white/65">{formatDate(game.created)}</p>
+              <h3 className="line-clamp-2 text-xl font-bold leading-tight text-white">{game.name}</h3>
+            </div>
+            <span className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur transition group-hover:bg-cyan-300 group-hover:text-slate-950">
+              <ArrowUpRight className="h-5 w-5" />
+            </span>
+          </div>
+        </div>
+      </a>
+
+      <div className="p-4 sm:p-5">
+        {game.description ? (
+          <p className="mb-4 line-clamp-2 min-h-10 text-sm leading-relaxed text-slate-300/70">
+            {game.description}
+          </p>
+        ) : (
+          <p className="mb-4 min-h-10 text-sm leading-relaxed text-slate-300/45">
+            A Roblox experience by LeonBlox.
+          </p>
+        )}
+        <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">VISITS</p>
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white">
+              <Play className="h-3.5 w-3.5 text-cyan-300" />
+              {compactNumber(game.visits)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">FAVORITES</p>
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white">
+              <Heart className="h-3.5 w-3.5 text-pink-300" />
+              {compactNumber(game.favorites)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">GENRE</p>
+            <p className="mt-1 truncate text-sm font-bold text-white">{game.genre || "Roblox"}</p>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function RobloxGamesPage() {
+  const [portfolio, setPortfolio] = useState<RobloxPortfolio | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<PortfolioTab>("games");
+  const [filter, setFilter] = useState<GameFilter>("all");
+  const [search, setSearch] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setIsLoading(true);
+      setError("");
+      try {
+        const response = await fetch("/api/roblox-games");
+        if (!response.ok) throw new Error("Roblox game data is temporarily unavailable.");
+        const data = (await response.json()) as RobloxPortfolio;
+        if (active) setPortfolio(data);
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : "Could not load Roblox games.");
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(() => void load(), 10 * 60 * 1000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [retryKey]);
+
+  const visibleGames = useMemo(() => {
+    const games = portfolio?.games ?? [];
+    return games.filter((game) => {
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "creator" && game.creatorType === "User") ||
+        (filter === "studio" && game.creatorType === "Group");
+      return matchesFilter && game.name.toLowerCase().includes(search.trim().toLowerCase());
+    });
+  }, [filter, portfolio, search]);
+
+  const earliestGame = portfolio?.games[0];
+  const latestUpdate = portfolio?.updatedAt ? formatDate(portfolio.updatedAt) : null;
+  const filters: { key: GameFilter; label: string }[] = [
+    { key: "all", label: "All games" },
+    { key: "creator", label: "LeonBloxOfficial" },
+    { key: "studio", label: "LeonBloxStudios" },
+  ];
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#080e16] text-white">
+      <SiteNav />
+
+      <section className="relative px-5 pb-14 pt-32 sm:px-8 sm:pt-36 lg:px-12 lg:pb-20">
+        <div className="pointer-events-none absolute inset-x-0 top-16 h-[520px] bg-[radial-gradient(ellipse_at_50%_0%,rgba(8,145,178,0.22),transparent_63%)]" />
+        <div className="pointer-events-none absolute -right-40 top-48 h-80 w-80 rounded-full bg-blue-500/10 blur-[100px]" />
+
+        <div className="relative mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end"
+          >
+            <div className="max-w-3xl">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.07] px-3 py-1.5 text-xs font-bold tracking-[0.18em] text-cyan-200">
+                <Sparkles className="h-3.5 w-3.5" />
+                ROBLOX CREATOR PORTFOLIO
+              </div>
+              <h1 className="text-5xl font-black leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
+                Built to be
+                <span className="block bg-gradient-to-r from-cyan-300 via-sky-400 to-violet-400 bg-clip-text pb-2 text-transparent">
+                  played.
+                </span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300/75 sm:text-lg">
+                Explore the Roblox experiences created by LeonBloxOfficial and LeonBloxStudios — from the earliest builds to the newest releases.
+              </p>
+            </div>
+
+            <a
+              href={`https://www.roblox.com/users/${portfolio?.creatorId ?? 1512057012}/profile`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition hover:border-cyan-300/40 hover:bg-white/10"
+              data-testid="link-roblox-profile"
+            >
+              Visit Roblox profile <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </motion.div>
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-3">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-2xl border border-cyan-200/15 bg-gradient-to-br from-cyan-400/[0.13] to-slate-950/60 p-5 sm:p-6"
+              data-testid="stat-total-game-visits"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-300">All-time game visits</span>
+                <Trophy className="h-5 w-5 text-cyan-200" />
+              </div>
+              <p className="mt-3 text-4xl font-black tracking-tight">500K<span className="text-cyan-300">+</span></p>
+              <p className="mt-1 text-xs text-slate-400">Combined across all Roblox games</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+              className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 sm:p-6"
+              data-testid="stat-public-experiences"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-300">Public experiences</span>
+                <Gamepad2 className="h-5 w-5 text-violet-300" />
+              </div>
+              <p className="mt-3 text-4xl font-black tracking-tight">
+                {isLoading ? "—" : `${portfolio?.games.length ?? 0}`}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">Across the profile and studio</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.26 }}
+              className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 sm:p-6"
+              data-testid="stat-studio-members"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-300">Studio community</span>
+                <Users className="h-5 w-5 text-pink-300" />
+              </div>
+              <p className="mt-3 text-4xl font-black tracking-tight">
+                {portfolio?.groupMemberCount ? `${compactNumber(portfolio.groupMemberCount)}+` : "—"}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">Members in LeonBloxStudios</p>
+            </motion.div>
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-b border-white/10">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("games")}
+                aria-pressed={activeTab === "games"}
+                data-testid="tab-games"
+                className={`relative px-4 py-4 text-sm font-bold transition ${activeTab === "games" ? "text-white" : "text-slate-400 hover:text-white"}`}
+              >
+                Games
+                {activeTab === "games" && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-cyan-300" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("milestones")}
+                aria-pressed={activeTab === "milestones"}
+                data-testid="tab-milestones"
+                className={`relative px-4 py-4 text-sm font-bold transition ${activeTab === "milestones" ? "text-white" : "text-slate-400 hover:text-white"}`}
+              >
+                Wins & milestones
+                {activeTab === "milestones" && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-cyan-300" />}
+              </button>
+            </div>
+            {activeTab === "games" && latestUpdate && (
+              <span className="flex items-center gap-1.5 pb-1 text-xs text-slate-400">
+                <RefreshCw className="h-3 w-3" />
+                Roblox data refreshed {latestUpdate}
+              </span>
+            )}
+          </div>
+
+          {activeTab === "games" ? (
+            <section className="pt-8" aria-label="Roblox game collection">
+              <div className="mb-7 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-cyan-200">
+                    <ArrowDown className="h-4 w-4" />
+                    OLDEST TO NEWEST
+                  </div>
+                  <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">The game library</h2>
+                  <p className="mt-2 text-sm text-slate-400">
+                    Live public stats and game icons pulled from Roblox.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="relative block sm:w-64">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Find a game..."
+                      aria-label="Find a Roblox game"
+                      data-testid="input-search-games"
+                      className="h-11 border-white/10 bg-white/[0.05] pl-9 text-white placeholder:text-slate-500 focus-visible:ring-cyan-300/50"
+                    />
+                  </label>
+                  <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] p-1">
+                    {filters.map((option) => (
+                      <button
+                        type="button"
+                        key={option.key}
+                        onClick={() => setFilter(option.key)}
+                        aria-pressed={filter === option.key}
+                        data-testid={`filter-games-${option.key}`}
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${filter === option.key ? "bg-cyan-300 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {isLoading && (
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <div key={index} className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
+                      <div className="aspect-[16/10] bg-white/[0.06]" />
+                      <div className="space-y-3 p-5">
+                        <div className="h-4 w-2/3 rounded bg-white/10" />
+                        <div className="h-3 w-full rounded bg-white/[0.07]" />
+                        <div className="h-8 rounded bg-white/[0.05]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!isLoading && error && (
+                <div className="rounded-2xl border border-rose-300/20 bg-rose-300/[0.06] p-8 text-center" data-testid="status-games-error">
+                  <p className="text-lg font-bold">Couldn’t load the Roblox catalog</p>
+                  <p className="mt-2 text-sm text-slate-300">{error}</p>
+                  <Button
+                    type="button"
+                    onClick={() => setRetryKey((key) => key + 1)}
+                    className="mt-5 bg-cyan-300 font-bold text-slate-950 hover:bg-cyan-200"
+                    data-testid="button-retry-games"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" /> Try again
+                  </Button>
+                </div>
+              )}
+
+              {!isLoading && !error && visibleGames.length > 0 && (
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {visibleGames.map((game, index) => (
+                    <GameCard key={game.id} game={game} index={index} />
+                  ))}
+                </div>
+              )}
+
+              {!isLoading && !error && visibleGames.length === 0 && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.035] py-16 text-center" data-testid="status-no-games">
+                  <Search className="mx-auto h-8 w-8 text-slate-500" />
+                  <p className="mt-3 font-semibold text-white">No games match that search.</p>
+                  <p className="mt-1 text-sm text-slate-400">Try another title or switch the creator filter.</p>
+                </div>
+              )}
+
+              {!isLoading && !error && earliestGame && (
+                <p className="mt-7 flex items-center gap-2 text-xs text-slate-500">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Earliest public experience listed: {earliestGame.name}, {formatDate(earliestGame.created)}.
+                </p>
+              )}
+            </section>
+          ) : (
+            <section className="pt-10" aria-label="Roblox wins and milestones">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 max-w-2xl"
+              >
+                <div className="flex items-center gap-2 text-sm font-semibold text-cyan-200">
+                  <Sparkles className="h-4 w-4" />
+                  BUILT WITH THE ROBLOX COMMUNITY
+                </div>
+                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Wins worth celebrating</h2>
+                <p className="mt-3 leading-relaxed text-slate-300/70">
+                  A few landmarks from the creator journey, alongside the public Roblox catalog.
+                </p>
+              </motion.div>
+
+              <div className="relative grid gap-4 md:grid-cols-2">
+                <div className="pointer-events-none absolute bottom-12 left-1/2 top-12 hidden w-px -translate-x-1/2 bg-gradient-to-b from-cyan-300/50 via-violet-300/35 to-transparent md:block" />
+                {userReportedMilestones.map((milestone, index) => {
+                  const Icon = milestone.icon;
+                  return (
+                    <motion.article
+                      key={milestone.title}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${milestone.accent} p-6 sm:p-8`}
+                      data-testid={`card-milestone-${index}`}
+                    >
+                      <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full border border-white/[0.07]" />
+                      <div className="relative flex items-start justify-between">
+                        <div>
+                          <span className="inline-flex rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[10px] font-bold tracking-[0.17em] text-white/75">
+                            {milestone.tag}
+                          </span>
+                          <p className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">{milestone.number}</p>
+                          <h3 className="mt-2 text-xl font-bold">{milestone.title}</h3>
+                          <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-200/70">{milestone.detail}</p>
+                        </div>
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/20">
+                          <Icon className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+
+                <motion.article
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="relative rounded-2xl border border-white/10 bg-[#101923] p-6 sm:p-8"
+                  data-testid="card-milestone-studio"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="rounded-full border border-pink-300/20 bg-pink-300/[0.08] px-3 py-1 text-[10px] font-bold tracking-[0.17em] text-pink-200">
+                      COMMUNITY
+                    </span>
+                    <Users className="h-5 w-5 text-pink-200" />
+                  </div>
+                  <p className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+                    {portfolio?.groupMemberCount ? `${compactNumber(portfolio.groupMemberCount)}+` : "59K+"}
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold">LeonBloxStudios members</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300/70">
+                    Roblox group membership, fetched live from the public group profile.
+                  </p>
+                  <a
+                    href={`https://www.roblox.com/communities/${portfolio?.groupId ?? 173769384}/LeonBloxStudios`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-cyan-200 hover:text-cyan-100"
+                    data-testid="link-roblox-studio-group"
+                  >
+                    Visit the studio group <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                </motion.article>
+
+                <motion.article
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative rounded-2xl border border-white/10 bg-[#101923] p-6 sm:p-8"
+                  data-testid="card-milestone-library"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="rounded-full border border-violet-300/20 bg-violet-300/[0.08] px-3 py-1 text-[10px] font-bold tracking-[0.17em] text-violet-200">
+                      THE JOURNEY
+                    </span>
+                    <Clock3 className="h-5 w-5 text-violet-200" />
+                  </div>
+                  <p className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+                    {isLoading ? "—" : `${portfolio?.games.length ?? 0}`}
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold">Public experiences in the library</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300/70">
+                    {earliestGame
+                      ? `The earliest currently listed public game is ${earliestGame.name}, created ${formatDate(earliestGame.created)}.`
+                      : "The public games are listed from the earliest creation date to the newest."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("games")}
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-cyan-200 hover:text-cyan-100"
+                    data-testid="button-view-game-library"
+                  >
+                    Browse the game library <ArrowUpRight className="h-4 w-4" />
+                  </button>
+                </motion.article>
+              </div>
+
+              <div className="mt-8 flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-4 text-xs leading-relaxed text-slate-400">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                <p>
+                  Individual game stats and group membership come from Roblox’s public APIs. The 500K+ figure is your combined total across all Roblox games, and the Shooting Arena figure is from your screenshot. Roblox’s public catalog does not expose a complete historical visit total for every creator game.
+                </p>
+              </div>
+            </section>
+          )}
+        </div>
+      </section>
+
+      <SiteFooter />
+    </main>
+  );
+}
+
+export default RobloxGamesPage;

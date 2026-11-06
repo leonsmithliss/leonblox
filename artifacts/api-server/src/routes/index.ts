@@ -13,6 +13,7 @@ import stripeCheckoutRouter from "./stripe-checkout";
 import stripeSeedRouter from "./stripe-seed";
 import donateRouter from "./donate";
 import adminModerateRouter from "./admin-moderate";
+import robloxGamesRouter from "./roblox-games";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(stripeCheckoutRouter);
 router.use(stripeSeedRouter);
 router.use(donateRouter);
 router.use(adminModerateRouter);
+router.use(robloxGamesRouter);
 
 export default router;
